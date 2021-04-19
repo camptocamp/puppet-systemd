@@ -65,7 +65,7 @@ define systemd::dropin_file (
     }
   }
 
-  if $ensure != 'absent' {
+  if $ensure != 'absent' and !defined(File["${path}/${unit}.d"]) {
     ensure_resource('file', "${path}/${unit}.d", {
         ensure                  => directory,
         owner                   => 'root',
