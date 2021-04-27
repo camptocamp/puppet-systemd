@@ -45,12 +45,6 @@ describe 'systemd::service_limits' do
               .with_content(%r{IODeviceWeight=/dev/weight2 20})
               .with_content(%r{IOReadBandwidthMax=/bw/max 10K})
           }
-          it {
-            is_expected.to create_exec("restart #{title} because limits").with(
-              command: "systemctl restart #{title}",
-              refreshonly: true,
-            )
-          }
         end
 
         describe 'ensured absent' do
@@ -60,12 +54,21 @@ describe 'systemd::service_limits' do
           it do
             is_expected.to create_file("/etc/systemd/system/#{title}.d/90-limits.conf")
               .with_ensure('absent')
-              .that_notifies("Exec[restart #{title} because limits]")
           end
+        end
+
+        describe 'with service managed' do
+          let(:pre_condition) do
+            <<-PUPPET
+            service { 'test':
+            }
+            PUPPET
+          end
+
+          it { is_expected.to compile.with_all_deps }
           it do
-            is_expected.to create_exec("restart #{title} because limits")
-              .with_command("systemctl restart #{title}")
-              .with_refreshonly(true)
+            is_expected.to create_file("/etc/systemd/system/#{title}.d/90-limits.conf")
+              .that_notifies('Service[test]')
           end
         end
       end
