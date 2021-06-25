@@ -265,7 +265,7 @@ $manage_networkd is required if you want to reload it for new
 
 When configuring `systemd::resolved` you could set `dns_stub_resolver` to false (default) to use a *standard* `/etc/resolved.conf`, or you could set it to `true` to use the local resolver provided by `systemd-resolved`.
 
-Systemd has introduced `DNS Over TLS` in the release 239. Currently two states are supported `no` and `opportunistic`. When enabled with `opportunistic` `systemd-resolved` will start a TCP-session to a DNS server with `DNS Over TLS` support. Note that there will be no host checking for `DNS Over TLS` due to missing implementation in `systemd-resolved`.
+Systemd has introduced `DNS Over TLS` in the release 239. Currently three states are supported `yes` (since systemd 243), `opportunistic` (true) and `no` (false, default). When enabled with `yes` or `opportunistic` `systemd-resolved` will start a TCP-session to a DNS server with `DNS Over TLS` support. When enabled with `yes` (strict mode), queries will fail if the configured DNS servers do not support `DNS Over TLS`. Note that there will be no host checking for `DNS Over TLS` due to missing implementation in `systemd-resolved`.
 
 It is possible to configure the default ntp servers in `/etc/systemd/timesyncd.conf`:
 
