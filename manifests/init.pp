@@ -37,7 +37,8 @@
 #   Takes a boolean argument or "allow-downgrade".
 #
 # @param dnsovertls
-#   Takes a boolean argument or "opportunistic"
+#   Takes a boolean argument or one of "yes", "opportunistic" or "no". "true" corresponds to
+#   "opportunistic" and "false" (default) to "no".
 #
 # @param cache
 #   Takes a boolean argument or "no-negative".
@@ -122,7 +123,7 @@ class systemd (
   Optional[Variant[Boolean,Enum['resolve']]]             $llmnr,
   Optional[Variant[Boolean,Enum['resolve']]]             $multicast_dns,
   Optional[Variant[Boolean,Enum['allow-downgrade']]]     $dnssec,
-  Optional[Variant[Boolean,Enum['opportunistic', 'no']]] $dnsovertls,
+  Optional[Variant[Boolean,Enum['yes', 'opportunistic', 'no']]] $dnsovertls,
   Optional[Variant[Boolean,Enum['no-negative']]]         $cache,
   Optional[Variant[Boolean,Enum['udp','tcp']]]           $dns_stub_listener,
   Boolean                                                $use_stub_resolver,
