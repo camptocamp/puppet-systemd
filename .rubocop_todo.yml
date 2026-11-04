@@ -18,3 +18,11 @@ RSpec/LeakyLocalVariable:
 Style/FileNull:
   Exclude:
     - 'spec/defines/unit_file_spec.rb'
+
+# Offense count: 1
+# This cop supports safe autocorrection (--autocorrect).
+# Configuration parameters: EnforcedStyle.
+# SupportedStyles: format, sprintf, percent
+Style/FormatString:
+  Exclude:
+    - 'lib/puppet/provider/networkctl/ruby.rb'
