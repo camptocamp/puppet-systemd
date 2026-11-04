@@ -13,6 +13,8 @@ describe 'Systemd::Unit::Mount' do
   context 'with a key of Where can have a path to mount on' do
     it { is_expected.to allow_value({ 'Where' => '/mnt/foo' }) }
     it { is_expected.to allow_value({ 'Where' => '/mnt/foo/file.txt' }) }
+    it { is_expected.to allow_value({ 'Where' => '%h/mnt/foo' }) }
+    it { is_expected.not_to allow_value({ 'Where' => 'mnt/foo' }) }
   end
 
   context 'with a key of Type can have a path to mount on' do

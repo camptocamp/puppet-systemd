@@ -47,6 +47,7 @@ describe 'Systemd::Unit::Service' do
   # === PIDFile= ===
   context 'PIDFile=' do
     it { is_expected.to allow_value({ 'PIDFile' => '/run/service.pid' }) }
+    it { is_expected.to allow_value({ 'PIDFile' => '%t/service.pid' }) }
     it { is_expected.not_to allow_value({ 'PIDFile' => 'relative.pid' }) }
   end
 
@@ -216,6 +217,7 @@ describe 'Systemd::Unit::Service' do
   %w[USBFunctionDescriptors USBFunctionStrings].each do |key|
     context "#{key}=" do
       it { is_expected.to allow_value({ key => '/etc/usb/descriptors' }) }
+      it { is_expected.to allow_value({ key => '%E/usb/descriptors' }) }
       it { is_expected.not_to allow_value({ key => 'relative/path' }) }
     end
   end
@@ -402,11 +404,13 @@ describe 'Systemd::Unit::Service' do
 
   context 'RootDirectory=' do
     it { is_expected.to allow_value({ 'RootDirectory' => '/mnt/chroot' }) }
+    it { is_expected.to allow_value({ 'RootDirectory' => '%h/.local/share/chroot' }) }
     it { is_expected.not_to allow_value({ 'RootDirectory' => 'relative' }) }
   end
 
   context 'RootImage=' do
     it { is_expected.to allow_value({ 'RootImage' => '/var/lib/image.raw' }) }
+    it { is_expected.to allow_value({ 'RootImage' => '%h/.local/share/image.raw' }) }
     it { is_expected.not_to allow_value({ 'RootImage' => 'image.raw' }) }
   end
 
@@ -448,6 +452,10 @@ describe 'Systemd::Unit::Service' do
     context "#{key}=" do
       it { is_expected.to allow_value({ key => '/src' }) }
       it { is_expected.to allow_value({ key => ['/src', '/dst'] }) }
+      it { is_expected.to allow_value({ key => '-/src' }) }
+      it { is_expected.to allow_value({ key => '%h/.local/share/src' }) }
+      it { is_expected.to allow_value({ key => ['-%h/.local/share/src', '/dst'] }) }
+      it { is_expected.not_to allow_value({ key => 'src' }) }
     end
   end
 
@@ -460,6 +468,8 @@ describe 'Systemd::Unit::Service' do
     context "#{key}=" do
       it { is_expected.to allow_value({ key => '+/var/log' }) }
       it { is_expected.to allow_value({ key => ['-/var/log', '+/opt/', '-+/home'] }) }
+      it { is_expected.to allow_value({ key => '+%h/.local/share' }) }
+      it { is_expected.to allow_value({ key => ['-%h/.local/share', '+%h/.cache', '-+%h/.config'] }) }
       it { is_expected.not_to allow_value({ key => 'foo bar blub' }) }
       it { is_expected.not_to allow_value({ key => '+-/opt' }) }
     end
@@ -499,6 +509,7 @@ describe 'Systemd::Unit::Service' do
 
   context 'NetworkNamespacePath=' do
     it { is_expected.to allow_value({ 'NetworkNamespacePath' => '/var/run/netns/mynamespace' }) }
+    it { is_expected.to allow_value({ 'NetworkNamespacePath' => '%t/netns/mynamespace' }) }
     it { is_expected.not_to allow_value({ 'NetworkNamespacePath' => 'relative' }) }
   end
 
@@ -556,6 +567,9 @@ describe 'Systemd::Unit::Service' do
     it { is_expected.to allow_value({ 'EnvironmentFile' => '/etc/sysconfig/foo' }) }
     it { is_expected.to allow_value({ 'EnvironmentFile' => '-/etc/sysconfig/foo' }) }
     it { is_expected.to allow_value({ 'EnvironmentFile' => ['/etc/sysconfig/foo', '-/etc/sysconfig/foo-bar'] }) }
+    it { is_expected.to allow_value({ 'EnvironmentFile' => '%h/.config/myapp/env' }) }
+    it { is_expected.to allow_value({ 'EnvironmentFile' => '-%h/.config/myapp/env' }) }
+    it { is_expected.to allow_value({ 'EnvironmentFile' => ['%h/.config/myapp/env', '-%h/.config/myapp/env'] }) }
     it { is_expected.not_to allow_value({ 'EnvironmentFile' => '-/' }) }
     it { is_expected.not_to allow_value({ 'EnvironmentFile' => 'relative-path.sh' }) }
   end

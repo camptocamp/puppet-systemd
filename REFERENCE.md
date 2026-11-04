@@ -82,6 +82,8 @@
 
 ### Data types
 
+#### Public Data types
+
 * [`Systemd::Boolean`](#Systemd--Boolean): Defines systemd boolean type representation
 * [`Systemd::Boolean::False`](#Systemd--Boolean--False): Defines systemd boolean "false" type representation
 * [`Systemd::Boolean::True`](#Systemd--Boolean--True): Defines systemd boolean "true" type representation
@@ -204,7 +206,9 @@
 * [`Systemd::Unit::Install`](#Systemd--Unit--Install): Possible keys for the [Install] section of a unit file
 * [`Systemd::Unit::Manager`](#Systemd--Unit--Manager): Possible keys for the [Manager] section of a system.conf/user.conf drop-in file
 * [`Systemd::Unit::Mount`](#Systemd--Unit--Mount): Possible keys for the [Mount] section of a unit file
+* [`Systemd::Unit::OptionalPathValue`](#Systemd--Unit--OptionalPathValue): An optional filesystem path value that may start with a systemd specifier (e.g. %h)
 * [`Systemd::Unit::Path`](#Systemd--Unit--Path): Possible keys for the [Path] section of a unit file
+* [`Systemd::Unit::PathValue`](#Systemd--Unit--PathValue): A filesystem path value that may start with a systemd specifier (e.g. %h)
 * [`Systemd::Unit::Percent`](#Systemd--Unit--Percent): Systemd definition of a percentage
 * [`Systemd::Unit::Permille`](#Systemd--Unit--Permille): Systemd definition of a permille value (‰, 1/1000)
 * [`Systemd::Unit::Permyriad`](#Systemd--Unit--Permyriad): Systemd definition of a permyriad value (‱, 1/10000)
@@ -217,6 +221,11 @@
 * [`Systemd::Unit::Timespan`](#Systemd--Unit--Timespan): Timer specification for systemd time spans, e.g. timers.
 * [`Systemd::Unit::Unit`](#Systemd--Unit--Unit): Possible keys for the [Unit] section of a unit file
 * [`Systemd::Unit_type`](#Systemd--Unit_type): Validates a unit types
+
+#### Private Data types
+
+* `Systemd::Unit::AssertPathValue`: A path value for Assert* settings.
+* `Systemd::Unit::ConditionPathValue`: A path value for Condition* settings.
 
 ### Tasks
 
@@ -8365,7 +8374,7 @@ Alias of
 
 ```puppet
 Struct[{
-    Optional['Where'] => Stdlib::Absolutepath,
+    Optional['Where'] => Systemd::Unit::PathValue,
     Optional['ExtraOptions'] => String[1],
     Optional['DirectoryMode'] => Stdlib::Filemode,
     Optional['TimeoutIdleSec'] => Systemd::Timespan,
@@ -8485,7 +8494,7 @@ Alias of
 ```puppet
 Struct[{
     Optional['What']           => String[1],
-    Optional['Where']          => Stdlib::Unixpath,
+    Optional['Where']          => Systemd::Unit::PathValue,
     Optional['Type']           => String[1],
     Optional['Options']        => String[1],
     Optional['SloppyOptions']  => Boolean,
@@ -8526,6 +8535,12 @@ Struct[{
   }]
 ```
 
+### <a name="Systemd--Unit--OptionalPathValue"></a>`Systemd::Unit::OptionalPathValue`
+
+An optional filesystem path value that may start with a systemd specifier (e.g. %h)
+
+Alias of `Variant[Enum[''], Systemd::Unit::PathValue]`
+
 ### <a name="Systemd--Unit--Path"></a>`Systemd::Unit::Path`
 
 Possible keys for the [Path] section of a unit file
@@ -8537,11 +8552,11 @@ Alias of
 
 ```puppet
 Struct[{
-    Optional['PathExists']              => Variant[Enum[''],Stdlib::Unixpath,Array[Variant[Enum[''],Stdlib::Unixpath],1]],
-    Optional['PathExistsGlob']          => Variant[Enum[''],Stdlib::Unixpath,Array[Variant[Enum[''],Stdlib::Unixpath],1]],
-    Optional['PathChanged']             => Variant[Enum[''],Stdlib::Unixpath,Array[Variant[Enum[''],Stdlib::Unixpath],1]],
-    Optional['PathModified']            => Variant[Enum[''],Stdlib::Unixpath,Array[Variant[Enum[''],Stdlib::Unixpath],1]],
-    Optional['DirectoryNotEmpty']       => Variant[Enum[''],Stdlib::Unixpath,Array[Variant[Enum[''],Stdlib::Unixpath],1]],
+    Optional['PathExists']              => Variant[Systemd::Unit::OptionalPathValue,Array[Systemd::Unit::OptionalPathValue,1]],
+    Optional['PathExistsGlob']          => Variant[Systemd::Unit::OptionalPathValue,Array[Systemd::Unit::OptionalPathValue,1]],
+    Optional['PathChanged']             => Variant[Systemd::Unit::OptionalPathValue,Array[Systemd::Unit::OptionalPathValue,1]],
+    Optional['PathModified']            => Variant[Systemd::Unit::OptionalPathValue,Array[Systemd::Unit::OptionalPathValue,1]],
+    Optional['DirectoryNotEmpty']       => Variant[Systemd::Unit::OptionalPathValue,Array[Systemd::Unit::OptionalPathValue,1]],
     Optional['Unit']                    => Systemd::Unit,
     Optional['MakeDirectory']           => Boolean,
     Optional['DirectoryMode']           => Pattern[/\A[0-7]{1,4}\z/],
@@ -8549,6 +8564,12 @@ Struct[{
     Optional['TriggerLimitBurst']       => Integer[0],
   }]
 ```
+
+### <a name="Systemd--Unit--PathValue"></a>`Systemd::Unit::PathValue`
+
+A filesystem path value that may start with a systemd specifier (e.g. %h)
+
+Alias of `Variant[Stdlib::Unixpath, Pattern[/\A%[A-Za-z][^\n\0]*\z/]]`
 
 ### <a name="Systemd--Unit--Percent"></a>`Systemd::Unit::Percent`
 
@@ -8597,7 +8618,7 @@ Struct[{
     Optional['ExitType']                  => Enum['main', 'cgroup'],
     Optional['RemainAfterExit']           => Boolean,
     Optional['GuessMainPID']              => Boolean,
-    Optional['PIDFile']                   => Stdlib::Unixpath,
+    Optional['PIDFile']                   => Systemd::Unit::PathValue,
     Optional['BusName']                   => String[1],
     Optional['ExecStart']                 => Variant[Systemd::Unit::Service::Exec,Array[Systemd::Unit::Service::Exec,1]],
     Optional['ExecStartPre']              => Variant[Systemd::Unit::Service::Exec,Array[Systemd::Unit::Service::Exec,1]],
@@ -8639,19 +8660,37 @@ Struct[{
     Optional['ReloadSignal']              => Pattern[/^SIG[A-Z0-9]+$/],
     Optional['RootDirectoryStartOnly']    => Boolean,
     Optional['Sockets']                   => Variant[String[1],Array[String[1],1]],
-    Optional['USBFunctionDescriptors']    => Stdlib::Unixpath,
-    Optional['USBFunctionStrings']        => Stdlib::Unixpath,
+    Optional['USBFunctionDescriptors']    => Systemd::Unit::PathValue,
+    Optional['USBFunctionStrings']        => Systemd::Unit::PathValue,
     # Options from systemd.exec
     # https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html
     Optional['WorkingDirectory']          => String[0],
-    Optional['RootDirectory']             => Stdlib::Unixpath,
-    Optional['RootImage']                 => Stdlib::Unixpath,
+    Optional['RootDirectory']             => Systemd::Unit::PathValue,
+    Optional['RootImage']                 => Systemd::Unit::PathValue,
     Optional['RootImageOptions']          => String,
     Optional['RootEphemeral']             => Boolean,
     Optional['RootHash']                  => String,
     Optional['ProtectProc']               => Enum['noaccess', 'invisible', 'ptraceable', 'default'],
-    Optional['BindPaths']                 => Variant[Stdlib::Unixpath,Pattern[/-\/.+/], Array[Variant[Stdlib::Unixpath,Pattern[/-\/.+/]],1]],
-    Optional['BindReadOnlyPaths']         => Variant[Stdlib::Unixpath,Pattern[/-\/.+/], Array[Variant[Stdlib::Unixpath,Pattern[/-\/.+/]],1]],
+    Optional['BindPaths']                 => Variant[
+      Systemd::Unit::PathValue,
+      Pattern[/\A-\/[^\n\0]+\z/],
+      Pattern[/\A-%[A-Za-z][^\n\0]*\z/],
+      Array[Variant[
+        Systemd::Unit::PathValue,
+        Pattern[/\A-\/[^\n\0]+\z/],
+        Pattern[/\A-%[A-Za-z][^\n\0]*\z/],
+      ],1],
+    ],
+    Optional['BindReadOnlyPaths']         => Variant[
+      Systemd::Unit::PathValue,
+      Pattern[/\A-\/[^\n\0]+\z/],
+      Pattern[/\A-%[A-Za-z][^\n\0]*\z/],
+      Array[Variant[
+        Systemd::Unit::PathValue,
+        Pattern[/\A-\/[^\n\0]+\z/],
+        Pattern[/\A-%[A-Za-z][^\n\0]*\z/],
+      ],1],
+    ],
     Optional['TemporaryFileSystem']       => Variant[String[0],Array[String[0],1]],
     Optional['User']                      => String[1],
     Optional['Group']                     => String[1],
@@ -8698,15 +8737,60 @@ Struct[{
     Optional['CacheDirectory']            => String,
     Optional['RuntimeDirectoryMode']      => Stdlib::Filemode,
     Optional['LogsDirectoryMode']         => Stdlib::Filemode,
-    Optional['ReadWritePaths']            => Variant[Stdlib::Unixpath,Pattern[/^-?\+?\/.+/], Array[Variant[Stdlib::Unixpath,Pattern[/^-?\+?\/.+/]],1]],
-    Optional['ReadOnlyPaths']             => Variant[Stdlib::Unixpath,Pattern[/^-?\+?\/.+/], Array[Variant[Stdlib::Unixpath,Pattern[/^-?\+?\/.+/]],1]],
-    Optional['InaccessiblePaths']         => Variant[Stdlib::Unixpath,Pattern[/^-?\+?\/.+/], Array[Variant[Stdlib::Unixpath,Pattern[/^-?\+?\/.+/]],1]],
-    Optional['ExecPaths']                 => Variant[Stdlib::Unixpath,Pattern[/^-?\+?\/.+/], Array[Variant[Stdlib::Unixpath,Pattern[/^-?\+?\/.+/]],1]],
-    Optional['NoExecPaths']               => Variant[Stdlib::Unixpath,Pattern[/^-?\+?\/.+/], Array[Variant[Stdlib::Unixpath,Pattern[/^-?\+?\/.+/]],1]],
+    Optional['ReadWritePaths']            => Variant[
+      Systemd::Unit::PathValue,
+      Pattern[/\A-?\+?\/[^\n\0]*\z/],
+      Pattern[/\A-?\+?%[A-Za-z][^\n\0]*\z/],
+      Array[Variant[
+        Systemd::Unit::PathValue,
+        Pattern[/\A-?\+?\/[^\n\0]*\z/],
+        Pattern[/\A-?\+?%[A-Za-z][^\n\0]*\z/],
+      ],1],
+    ],
+    Optional['ReadOnlyPaths']             => Variant[
+      Systemd::Unit::PathValue,
+      Pattern[/\A-?\+?\/[^\n\0]*\z/],
+      Pattern[/\A-?\+?%[A-Za-z][^\n\0]*\z/],
+      Array[Variant[
+        Systemd::Unit::PathValue,
+        Pattern[/\A-?\+?\/[^\n\0]*\z/],
+        Pattern[/\A-?\+?%[A-Za-z][^\n\0]*\z/],
+      ],1],
+    ],
+    Optional['InaccessiblePaths']         => Variant[
+      Systemd::Unit::PathValue,
+      Pattern[/\A-?\+?\/[^\n\0]*\z/],
+      Pattern[/\A-?\+?%[A-Za-z][^\n\0]*\z/],
+      Array[Variant[
+        Systemd::Unit::PathValue,
+        Pattern[/\A-?\+?\/[^\n\0]*\z/],
+        Pattern[/\A-?\+?%[A-Za-z][^\n\0]*\z/],
+      ],1],
+    ],
+    Optional['ExecPaths']                 => Variant[
+      Systemd::Unit::PathValue,
+      Pattern[/\A-?\+?\/[^\n\0]*\z/],
+      Pattern[/\A-?\+?%[A-Za-z][^\n\0]*\z/],
+      Array[Variant[
+        Systemd::Unit::PathValue,
+        Pattern[/\A-?\+?\/[^\n\0]*\z/],
+        Pattern[/\A-?\+?%[A-Za-z][^\n\0]*\z/],
+      ],1],
+    ],
+    Optional['NoExecPaths']               => Variant[
+      Systemd::Unit::PathValue,
+      Pattern[/\A-?\+?\/[^\n\0]*\z/],
+      Pattern[/\A-?\+?%[A-Za-z][^\n\0]*\z/],
+      Array[Variant[
+        Systemd::Unit::PathValue,
+        Pattern[/\A-?\+?\/[^\n\0]*\z/],
+        Pattern[/\A-?\+?%[A-Za-z][^\n\0]*\z/],
+      ],1],
+    ],
     Optional['PrivateTmp']                => Boolean,
     Optional['PrivateDevices']            => Boolean,
     Optional['PrivateNetwork']            => Boolean,
-    Optional['NetworkNamespacePath']      => Stdlib::Unixpath,
+    Optional['NetworkNamespacePath']      => Systemd::Unit::PathValue,
     Optional['PrivateIPC']                => Boolean,
     Optional['PrivatePIDs']               => Boolean,
     Optional['PrivateUsers']              => Boolean,
@@ -8730,8 +8814,14 @@ Struct[{
     Optional['SystemCallArchitectures']   => Variant[String, Array[String]],
     Optional['Environment']               => Variant[String[0],Array[String[1],1]],
     Optional['EnvironmentFile']           => Variant[
-      Stdlib::Unixpath,Pattern[/-\/.+/],
-      Array[Variant[Stdlib::Unixpath,Pattern[/-\/.+/]],1],
+      Systemd::Unit::PathValue,
+      Pattern[/\A-\/[^\n\0]+\z/],
+      Pattern[/\A-%[A-Za-z][^\n\0]*\z/],
+      Array[Variant[
+        Systemd::Unit::PathValue,
+        Pattern[/\A-\/[^\n\0]+\z/],
+        Pattern[/\A-%[A-Za-z][^\n\0]*\z/],
+      ],1],
     ],
     Optional['StandardInput']             => Variant[Enum['null','tty','tty-force','tty-fail','data','socket'], Pattern[/\A(file:|fd:).+$\z/]],
     Optional['StandardOutput']            => Variant[Enum['inherit','null','tty','journal','kmsg','journal+console','kmsg+console','socket'],Pattern[/\A(file:|append:|truncate:).+$\z/]],
@@ -8854,11 +8944,11 @@ Struct[{
     Optional['ListenStream']            => Variant[Stdlib::Port,String[1]],
     Optional['ListenDatagram']          => Variant[Stdlib::Port,String[1]],
     Optional['ListenSequentialPacket']  => Variant[Stdlib::Port,String[1]],
-    Optional['ListenFIFO']              => Stdlib::Unixpath,
-    Optional['ListenSpecial']           => Stdlib::Unixpath,
+    Optional['ListenFIFO']              => Systemd::Unit::PathValue,
+    Optional['ListenSpecial']           => Systemd::Unit::PathValue,
     Optional['ListenNetlink']           => String[1],
-    Optional['ListenMessageQueue']      => Pattern[/\A\/.*\z/],
-    Optional['ListenUSBFunction']       => Stdlib::Unixpath,
+    Optional['ListenMessageQueue']      => Systemd::Unit::PathValue,
+    Optional['ListenUSBFunction']       => Systemd::Unit::PathValue,
     Optional['SocketProtocol']          => Enum['udplite', 'sctp'],
     Optional['BindIPv6Only']            => Enum['default', 'both', 'ipv6-only'],
     Optional['Backlog']                 => Integer[0],
@@ -8905,7 +8995,7 @@ Struct[{
     Optional['TimeoutSec']              => Systemd::Timespan,
     Optional['Service']                 => Systemd::Unit,
     Optional['RemoveOnStop']            => Boolean,
-    Optional['Symlinks']                => Variant[Stdlib::Unixpath,Array[Stdlib::Unixpath,1]],
+    Optional['Symlinks']                => Variant[Systemd::Unit::PathValue,Array[Systemd::Unit::PathValue,1]],
     Optional['FileDescriptorName']      => String[1,255],
     Optional['TriggerLimitIntervalSec'] => Systemd::Timespan,
     Optional['TriggerLimitBurst']       => Integer[0],
@@ -9027,8 +9117,8 @@ Struct[{
     Optional['PropagatesStopTo']            => Variant[Enum[''],Systemd::Unit,Array[Variant[Enum[''],Systemd::Unit],1]],
     Optional['StopPropagatedFrom']          => Variant[Enum[''],Systemd::Unit,Array[Variant[Enum[''],Systemd::Unit],1]],
     Optional['JoinsNamespaceOf']            => Variant[Enum[''],Systemd::Unit,Array[Variant[Enum[''],Systemd::Unit],1]],
-    Optional['RequiresMountsFor']           => Variant[Enum[''],Stdlib::Unixpath,Array[Variant[Enum[''],Stdlib::Unixpath],1]],
-    Optional['WantsMountsFor']              => Variant[Enum[''],Stdlib::Unixpath,Array[Variant[Enum[''],Stdlib::Unixpath],1]],
+    Optional['RequiresMountsFor']           => Variant[Systemd::Unit::OptionalPathValue,Array[Systemd::Unit::OptionalPathValue,1]],
+    Optional['WantsMountsFor']              => Variant[Systemd::Unit::OptionalPathValue,Array[Systemd::Unit::OptionalPathValue,1]],
     Optional['OnSuccessJobMode']            => Enum['fail', 'replace', 'replace-irreversibly', 'isolate', 'flush', 'ignore-dependencies', 'ignore-requirements'],
     Optional['OnFailureJobMode']            => Enum['fail', 'replace', 'replace-irreversibly', 'isolate', 'flush', 'ignore-dependencies', 'ignore-requirements'],
     Optional['IgnoreOnIsolate']             => Boolean,
@@ -9069,17 +9159,17 @@ Struct[{
     Optional['AssertMemoryPressure']        => Variant[String,Array[String,1]],
     Optional['AssertCPUPressure']           => Variant[String,Array[String,1]],
     Optional['AssertIOPressure']            => Variant[String,Array[String,1]],
-    Optional['AssertPathExists']            => Variant[Enum[''],Stdlib::Unixpath,Pattern[/^!\/.*$/],Array[Variant[Enum[''],Stdlib::Unixpath,Pattern[/^!\/.*$/]],1]],
-    Optional['AssertPathExistsGlob']        => Variant[Enum[''],Stdlib::Unixpath,Pattern[/^!\/.*$/],Array[Variant[Enum[''],Stdlib::Unixpath,Pattern[/^!\/.*$/]],1]],
-    Optional['AssertPathIsDirectory']       => Variant[Enum[''],Stdlib::Unixpath,Pattern[/^!\/.*$/],Array[Variant[Enum[''],Stdlib::Unixpath,Pattern[/^!\/.*$/]],1]],
-    Optional['AssertPathIsSymbolicLink']    => Variant[Enum[''],Stdlib::Unixpath,Pattern[/^!\/.*$/],Array[Variant[Enum[''],Stdlib::Unixpath,Pattern[/^!\/.*$/]],1]],
-    Optional['AssertPathIsMountPoint']      => Variant[Enum[''],Stdlib::Unixpath,Pattern[/^!\/.*$/],Array[Variant[Enum[''],Stdlib::Unixpath,Pattern[/^!\/.*$/]],1]],
-    Optional['AssertPathIsReadWrite']       => Variant[Enum[''],Stdlib::Unixpath,Pattern[/^!\/.*$/],Array[Variant[Enum[''],Stdlib::Unixpath,Pattern[/^!\/.*$/]],1]],
-    Optional['AssertPathIsEncrypted']       => Variant[Enum[''],Stdlib::Unixpath,Pattern[/^!\/.*$/],Array[Variant[Enum[''],Stdlib::Unixpath,Pattern[/^!\/.*$/]],1]],
-    Optional['AssertPathIsSocket']          => Variant[Enum[''],Stdlib::Unixpath,Pattern[/^!\/.*$/],Array[Variant[Enum[''],Stdlib::Unixpath,Pattern[/^!\/.*$/]],1]],
-    Optional['AssertFileNotEmpty']          => Variant[Enum[''],Stdlib::Unixpath,Pattern[/^!\/.*$/],Array[Variant[Enum[''],Stdlib::Unixpath,Pattern[/^!\/.*$/]],1]],
-    Optional['AssertDirectoryNotEmpty']     => Variant[Enum[''],Stdlib::Unixpath,Pattern[/^!\/.*$/],Array[Variant[Enum[''],Stdlib::Unixpath,Pattern[/^!\/.*$/]],1]],
-    Optional['AssertFileIsExecutable']      => Variant[Enum[''],Stdlib::Unixpath,Pattern[/^!\/.*$/],Array[Variant[Enum[''],Stdlib::Unixpath,Pattern[/^!\/.*$/]],1]],
+    Optional['AssertPathExists']            => Variant[Systemd::Unit::AssertPathValue,Array[Systemd::Unit::AssertPathValue,1]],
+    Optional['AssertPathExistsGlob']        => Variant[Systemd::Unit::AssertPathValue,Array[Systemd::Unit::AssertPathValue,1]],
+    Optional['AssertPathIsDirectory']       => Variant[Systemd::Unit::AssertPathValue,Array[Systemd::Unit::AssertPathValue,1]],
+    Optional['AssertPathIsSymbolicLink']    => Variant[Systemd::Unit::AssertPathValue,Array[Systemd::Unit::AssertPathValue,1]],
+    Optional['AssertPathIsMountPoint']      => Variant[Systemd::Unit::AssertPathValue,Array[Systemd::Unit::AssertPathValue,1]],
+    Optional['AssertPathIsReadWrite']       => Variant[Systemd::Unit::AssertPathValue,Array[Systemd::Unit::AssertPathValue,1]],
+    Optional['AssertPathIsEncrypted']       => Variant[Systemd::Unit::AssertPathValue,Array[Systemd::Unit::AssertPathValue,1]],
+    Optional['AssertPathIsSocket']          => Variant[Systemd::Unit::AssertPathValue,Array[Systemd::Unit::AssertPathValue,1]],
+    Optional['AssertFileNotEmpty']          => Variant[Systemd::Unit::AssertPathValue,Array[Systemd::Unit::AssertPathValue,1]],
+    Optional['AssertDirectoryNotEmpty']     => Variant[Systemd::Unit::AssertPathValue,Array[Systemd::Unit::AssertPathValue,1]],
+    Optional['AssertFileIsExecutable']      => Variant[Systemd::Unit::AssertPathValue,Array[Systemd::Unit::AssertPathValue,1]],
     Optional['ConditionArchitecture']       => Variant[String,Array[String,1]],
     Optional['ConditionFirmware']           => Variant[String,Array[String,1]],
     Optional['ConditionVirtualization']     => Variant[String,Array[String,1]],
@@ -9105,22 +9195,22 @@ Struct[{
     Optional['ConditionMemoryPressure']     => Variant[String,Array[String,1]],
     Optional['ConditionCPUPressure']        => Variant[String,Array[String,1]],
     Optional['ConditionIOPressure']         => Variant[String,Array[String,1]],
-    Optional['ConditionPathExists']         => Variant[Enum[''],Stdlib::Unixpath,Pattern[/^!\/.*$/],Pattern[/^\|\/.*$/],Pattern[/^\|!\/.*$/],Array[Variant[Enum[''],Stdlib::Unixpath,Pattern[/^!\/.*$/],Pattern[/^\|\/.*$/],Pattern[/^\|!\/.*$/]],1]],
-    Optional['ConditionPathExistsGlob']     => Variant[Enum[''],Stdlib::Unixpath,Pattern[/^!\/.*$/],Pattern[/^\|\/.*$/],Pattern[/^\|!\/.*$/],Array[Variant[Enum[''],Stdlib::Unixpath,Pattern[/^!\/.*$/],Pattern[/^\|\/.*$/],Pattern[/^\|!\/.*$/]],1]],
-    Optional['ConditionPathIsDirectory']    => Variant[Enum[''],Stdlib::Unixpath,Pattern[/^!\/.*$/],Pattern[/^\|\/.*$/],Pattern[/^\|!\/.*$/],Array[Variant[Enum[''],Stdlib::Unixpath,Pattern[/^!\/.*$/],Pattern[/^\|\/.*$/],Pattern[/^\|!\/.*$/]],1]],
-    Optional['ConditionPathIsSymbolicLink'] => Variant[Enum[''],Stdlib::Unixpath,Pattern[/^!\/.*$/],Pattern[/^\|\/.*$/],Pattern[/^\|!\/.*$/],Array[Variant[Enum[''],Stdlib::Unixpath,Pattern[/^!\/.*$/],Pattern[/^\|\/.*$/],Pattern[/^\|!\/.*$/]],1]],
-    Optional['ConditionPathIsMountPoint']   => Variant[Enum[''],Stdlib::Unixpath,Pattern[/^!\/.*$/],Pattern[/^\|\/.*$/],Pattern[/^\|!\/.*$/],Array[Variant[Enum[''],Stdlib::Unixpath,Pattern[/^!\/.*$/],Pattern[/^\|\/.*$/],Pattern[/^\|!\/.*$/]],1]],
-    Optional['ConditionPathIsReadWrite']    => Variant[Enum[''],Stdlib::Unixpath,Pattern[/^!\/.*$/],Pattern[/^\|\/.*$/],Pattern[/^\|!\/.*$/],Array[Variant[Enum[''],Stdlib::Unixpath,Pattern[/^!\/.*$/],Pattern[/^\|\/.*$/],Pattern[/^\|!\/.*$/]],1]],
-    Optional['ConditionPathIsEncrypted']    => Variant[Enum[''],Stdlib::Unixpath,Pattern[/^!\/.*$/],Pattern[/^\|\/.*$/],Pattern[/^\|!\/.*$/],Array[Variant[Enum[''],Stdlib::Unixpath,Pattern[/^!\/.*$/],Pattern[/^\|\/.*$/],Pattern[/^\|!\/.*$/]],1]],
-    Optional['ConditionPathIsSocket']       => Variant[Enum[''],Stdlib::Unixpath,Pattern[/^!\/.*$/],Pattern[/^\|\/.*$/],Pattern[/^\|!\/.*$/],Array[Variant[Enum[''],Stdlib::Unixpath,Pattern[/^!\/.*$/],Pattern[/^\|\/.*$/],Pattern[/^\|!\/.*$/]],1]],
-    Optional['ConditionDirectoryNotEmpty']  => Variant[Enum[''],Stdlib::Unixpath,Pattern[/^!\/.*$/],Pattern[/^\|\/.*$/],Pattern[/^\|!\/.*$/],Array[Variant[Enum[''],Stdlib::Unixpath,Pattern[/^!\/.*$/],Pattern[/^\|\/.*$/],Pattern[/^\|!\/.*$/]],1]],
-    Optional['ConditionFileNotEmpty']       => Variant[Enum[''],Stdlib::Unixpath,Pattern[/^!\/.*$/],Pattern[/^\|\/.*$/],Pattern[/^\|!\/.*$/],Array[Variant[Enum[''],Stdlib::Unixpath,Pattern[/^!\/.*$/],Pattern[/^\|\/.*$/],Pattern[/^\|!\/.*$/]],1]],
-    Optional['ConditionFileIsExecutable']   => Variant[Enum[''],Stdlib::Unixpath,Pattern[/^!\/.*$/],Pattern[/^\|\/.*$/],Pattern[/^\|!\/.*$/],Array[Variant[Enum[''],Stdlib::Unixpath,Pattern[/^!\/.*$/],Pattern[/^\|\/.*$/],Pattern[/^\|!\/.*$/]],1]],
+    Optional['ConditionPathExists']         => Variant[Systemd::Unit::ConditionPathValue,Array[Systemd::Unit::ConditionPathValue,1]],
+    Optional['ConditionPathExistsGlob']     => Variant[Systemd::Unit::ConditionPathValue,Array[Systemd::Unit::ConditionPathValue,1]],
+    Optional['ConditionPathIsDirectory']    => Variant[Systemd::Unit::ConditionPathValue,Array[Systemd::Unit::ConditionPathValue,1]],
+    Optional['ConditionPathIsSymbolicLink'] => Variant[Systemd::Unit::ConditionPathValue,Array[Systemd::Unit::ConditionPathValue,1]],
+    Optional['ConditionPathIsMountPoint']   => Variant[Systemd::Unit::ConditionPathValue,Array[Systemd::Unit::ConditionPathValue,1]],
+    Optional['ConditionPathIsReadWrite']    => Variant[Systemd::Unit::ConditionPathValue,Array[Systemd::Unit::ConditionPathValue,1]],
+    Optional['ConditionPathIsEncrypted']    => Variant[Systemd::Unit::ConditionPathValue,Array[Systemd::Unit::ConditionPathValue,1]],
+    Optional['ConditionPathIsSocket']       => Variant[Systemd::Unit::ConditionPathValue,Array[Systemd::Unit::ConditionPathValue,1]],
+    Optional['ConditionDirectoryNotEmpty']  => Variant[Systemd::Unit::ConditionPathValue,Array[Systemd::Unit::ConditionPathValue,1]],
+    Optional['ConditionFileNotEmpty']       => Variant[Systemd::Unit::ConditionPathValue,Array[Systemd::Unit::ConditionPathValue,1]],
+    Optional['ConditionFileIsExecutable']   => Variant[Systemd::Unit::ConditionPathValue,Array[Systemd::Unit::ConditionPathValue,1]],
     Optional['StartLimitIntervalSec']       => Systemd::Timespan,
     Optional['StartLimitBurst']             => Integer[1],
     Optional['StartLimitAction']            => Enum['none','reboot','reboot-force','reboot-immediate','poweroff','poweroff-force','poweroff-immediate','exit','exit-force','soft-reboot','soft-reboot-force','kexec','kexec-force','halt','halt-force','halt-immediate'],
     Optional['RebootArgument']              => String,
-    Optional['SourcePath']                  => Stdlib::Unixpath,
+    Optional['SourcePath']                  => Systemd::Unit::PathValue,
     Optional['JobTimeoutSec']               => Systemd::Timespan,
     Optional['JobRunningTimeoutSec']        => Systemd::Timespan,
     Optional['JobTimeoutAction']            => Enum['none','reboot','reboot-force','reboot-immediate','poweroff','poweroff-force','poweroff-immediate','exit','exit-force','soft-reboot','soft-reboot-force','kexec','kexec-force','halt','halt-force','halt-immediate'],
