@@ -8,7 +8,9 @@ describe 'Systemd::Unit::Path' do
       it { is_expected.to allow_value({ assert => '' }) }
       it { is_expected.to allow_value({ assert => '/etc/passwd' }) }
       it { is_expected.to allow_value({ assert => '/etc/krb5.conf.d/*.conf' }) }
+      it { is_expected.to allow_value({ assert => '%h/.config/myapp/config.json' }) }
       it { is_expected.to allow_value({ assert => ['', '/etc/group', '/etc/sssd/sssd.conf.d/*.conf'] }) }
+      it { is_expected.to allow_value({ assert => ['', '%h/.config/myapp/config.json'] }) }
       it { is_expected.not_to allow_value({ assert => 'rc.d/rc.local' }) }
       it { is_expected.not_to allow_value({ assert => ['', 'var/run'] }) }
     end

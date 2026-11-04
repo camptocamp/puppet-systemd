@@ -32,32 +32,38 @@ UNIT_INVALID = [
   ['noextension'],
 ].freeze
 
-# Variant[Enum[''], Stdlib::Unixpath, Array[Variant[Enum[''], Stdlib::Unixpath], 1]]
-# Empty-string reset, an absolute path, or a non-empty array of those.
+# Variant[Systemd::Unit::OptionalPathValue, Array[Systemd::Unit::OptionalPathValue, 1]]
+# Empty-string reset, an absolute or specifier (%h/...) path, or a non-empty array of those.
 # No negation prefix; no empty array.
 ABSPATH_VALID = [
   '/an/absolute/path',
+  '%h/.local/share',
   '',
-  ['', '/an/absolute/path'],
+  ['', '/an/absolute/path', '%h/.local/share'],
 ].freeze
 ABSPATH_INVALID = [
   'not/absolute',
+  '%/not/a/specifier',
   ['not/absolute'],
   [],
 ].freeze
 
-# Variant[Enum[''], Stdlib::Unixpath, Pattern[/^!.*$/], Array[...same..., 1]]
-# Empty-string reset, absolute path, negated path (!...), or non-empty array of those.
+# Variant[Systemd::Unit::AssertPathValue, Array[Systemd::Unit::AssertPathValue, 1]]
+# Empty-string reset, absolute or specifier path, negated path (!...), or non-empty array of those.
 # (Assert* keys use this pattern - only negation with !)
 ASSERT_PATH_VALID = [
   '/my/path',
   '!/my/path',
+  '%h/my/path',
+  '!%h/my/path',
   '',
-  ['', '/my/path', '!/my/other/path'],
+  ['', '/my/path', '!/my/other/path', '%h/my/path'],
 ].freeze
 ASSERT_PATH_INVALID = [
   '|/my/path',
   '|!/my/path',
+  '|%h/my/path',
+  '!not/absolute',
   ['|/my/path'],
   ['|!/my/path'],
   'not/absolute',
@@ -65,8 +71,8 @@ ASSERT_PATH_INVALID = [
   [],
 ].freeze
 
-# Variant[Enum[''], Stdlib::Unixpath, Pattern[/^(\|!?)?.*$/], Array[...same..., 1]]
-# Empty-string reset, absolute path, negated path (!...), triggering path (|...),
+# Variant[Systemd::Unit::ConditionPathValue, Array[Systemd::Unit::ConditionPathValue, 1]]
+# Empty-string reset, absolute or specifier path, negated path (!...), triggering path (|...),
 # or triggering negated path (|!...), or non-empty array of those.
 # (Condition* keys use this pattern - supports both ! and |)
 CONDITION_PATH_VALID = [
@@ -74,11 +80,18 @@ CONDITION_PATH_VALID = [
   '!/my/path',
   '|/my/path',
   '|!/my/path',
+  '%h/my/path',
+  '!%h/my/path',
+  '|%h/my/path',
+  '|!%h/my/path',
   '',
-  ['', '/my/path', '!/my/other/path', '|/third/path', '|!/fourth/path'],
+  ['', '/my/path', '!/my/other/path', '|/third/path', '|!/fourth/path', '%h/fifth/path'],
 ].freeze
 CONDITION_PATH_INVALID = [
   'not/absolute',
+  '!not/absolute',
+  '|not/absolute',
+  '!|/my/path',
   ['not/absolute'],
   [],
 ].freeze
@@ -284,8 +297,8 @@ describe 'Systemd::Unit::Unit' do
 
   # ---------------------------------------------------------------------------
   # Mount path dependencies
-  # Variant[Enum[''], Stdlib::Unixpath, Array[Variant[Enum[''], Stdlib::Unixpath], 1]]
-  # Absolute paths only - no negation prefix.
+  # Variant[Systemd::Unit::OptionalPathValue, Array[Systemd::Unit::OptionalPathValue, 1]]
+  # Absolute or specifier paths - no negation prefix.
   # ---------------------------------------------------------------------------
 
   %w[RequiresMountsFor WantsMountsFor].each do |key|
@@ -400,12 +413,13 @@ describe 'Systemd::Unit::Unit' do
 
   # ---------------------------------------------------------------------------
   # SourcePath
-  # Stdlib::Unixpath - absolute path only, no empty string
+  # Systemd::Unit::PathValue - absolute or specifier path, no empty string
   # ---------------------------------------------------------------------------
 
   context 'SourcePath' do
     it { is_expected.to     allow_value({ 'SourcePath' => '/etc/myapp/myapp.conf' }) }
     it { is_expected.to     allow_value({ 'SourcePath' => '/run/generated.conf' }) }
+    it { is_expected.to     allow_value({ 'SourcePath' => '%E/myapp/myapp.conf' }) }
     it { is_expected.not_to allow_value({ 'SourcePath' => 'relative/path' }) }
     it { is_expected.not_to allow_value({ 'SourcePath' => '' }) }
   end

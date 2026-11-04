@@ -20,12 +20,14 @@ describe 'systemd::manage_unit' do
               unit_entry: {
                 Description: ['My great service', 'has two lines of description'],
                 DefaultDependencies: true,
+                ConditionPathExists: '%h/.config/myapp/config.json',
               },
               service_entry: {
                 Type: 'oneshot',
                 ExecStart: '/usr/bin/doit.sh',
                 SyslogIdentifier: 'doit-backwards.sh',
                 Environment: ['bla=foo', 'foo=bla'],
+                EnvironmentFile: '%h/.config/myapp/env',
                 IOReadIOPSMax: ['/dev/afs', '1K'],
               },
               install_entry: {
@@ -42,7 +44,9 @@ describe 'systemd::manage_unit' do
               .with_content(%r{^#   some other comment})
               .with_content(%r{^\[Unit\]$})
               .with_content(%r{^DefaultDependencies=true$})
+              .with_content(%r{^ConditionPathExists=%h/\.config/myapp/config\.json$})
               .with_content(%r{^\[Service\]$})
+              .with_content(%r{^EnvironmentFile=%h/\.config/myapp/env$})
               .with_content(%r{^SyslogIdentifier=doit-backwards\.sh$})
               .with_content(%r{^Environment=bla=foo$})
               .with_content(%r{^Environment=foo=bla$})
@@ -469,7 +473,7 @@ describe 'systemd::manage_unit' do
                 'PathExists'              => '/etc/passwd',
                 'PathExistsGlob'          => '/etc/krb5.conf.d/*.conf',
                 'PathChanged'             => '',
-                'PathModified'            => ['', '/etc/httpd/conf.d/*.conf'],
+                'PathModified'            => ['', '%h/.config/myapp/config.json', '/etc/httpd/conf.d/*.conf'],
                 'DirectoryNotEmpty'       => '/tmp',
                 'Unit'                    => 'my.service',
                 'MakeDirectory'           => true,
@@ -490,6 +494,7 @@ describe 'systemd::manage_unit' do
               .with_content(%r{^PathExistsGlob=/etc/krb5.conf.d/\*.conf$})
               .with_content(%r{^PathChanged=$})
               .with_content(%r{^PathModified=$})
+              .with_content(%r{^PathModified=%h/\.config/myapp/config\.json$})
               .with_content(%r{^PathModified=/etc/httpd/conf.d/\*.conf$})
               .with_content(%r{^DirectoryNotEmpty=/tmp$})
               .with_content(%r{^Unit=my.service$})
