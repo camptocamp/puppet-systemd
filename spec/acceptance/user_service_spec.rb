@@ -22,13 +22,6 @@ describe 'systemd::user_service' do
           linger  => enabled,
         }
 
-        # https://github.com/voxpupuli/puppet-systemd/issues/578
-        exec{'/usr/bin/sleep 10 && touch /tmp/sleep-only-once':
-          creates   => '/tmp/sleep-only-once',
-          require   => Loginctl_user['higgs'],
-          before    => File['/home/higgs/.config'],
-        }
-
         # Assumes home directory was created as /home/higgs
         file{['/home/higgs/.config', '/home/higgs/.config/systemd','/home/higgs/.config/systemd/user']:
           ensure => directory,
