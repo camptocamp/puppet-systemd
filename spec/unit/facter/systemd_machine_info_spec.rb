@@ -14,7 +14,7 @@ describe Facter.fact(:systemd_machine_info) do
   describe 'systemd_machine_info' do
     context 'returns machine info when systemd present' do
       let(:json_output) do
-        '{"CHASSIS":"desktop","DEPLOYMENT":"production","DOCUMENTATION":"https://docs.example.com","HOSTNAME":"server01.example.com","ICON_NAME":"computer-desktop","ML_MACHINE":"x86_64","ML_SUBMODEL":"Pro","ML_VERSION":"1","OPERATING_SYSTEM_VERSION":"8.5","PRETTY_CHASSIS":"Desktop","SUPPORT_END":"2029-05-31","SUPPORT_URL":"https://support.example.com","SUPPORT_ZONE":"enterprise","TAGS":"production:x86_64:team=enterprise","USR_LOCAL":"/usr/local"}'
+        '{"Hostname":"server01.example.com","Chassis":"desktop","Deployment":"production","Location":"Data Center","MachineInformationData":["CHASSIS=desktop","DEPLOYMENT=production","LOCATION=Data Center","TAGS=production:x86_64:team=enterprise"]}'
       end
 
       before do
@@ -25,8 +25,8 @@ describe Facter.fact(:systemd_machine_info) do
         allow(Facter::Core::Execution).to receive(:execute).with('hostnamectl --json=short 2>/dev/null').and_return(json_output)
         result = Facter.value(:systemd_machine_info)
         expect(result).to be_a(Hash)
-        expect(result['HOSTNAME']).to eq('server01.example.com')
         expect(result['CHASSIS']).to eq('desktop')
+        expect(result['DEPLOYMENT']).to eq('production')
         expect(result['TAGS']).to eq(['production', 'team=enterprise', 'x86_64'])
       end
 

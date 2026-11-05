@@ -80,8 +80,14 @@ Facter.add(:systemd_machine_info) do
     command_output = Facter::Core::Execution.execute('hostnamectl --json=short 2>/dev/null')
     json_data = JSON.parse(command_output)
 
+    # The /etc/machine-info settings (PRETTY_HOSTNAME, CHASSIS, DEPLOYMENT,
+    # LOCATION, TAGS, etc.) are not top-level keys; they are nested as
+    # "KEY=value" strings inside the MachineInformationData array.
+    machine_info_data = json_data['MachineInformationData'] || []
+
     result = {}
-    json_data.each do |key, value|
+    machine_info_data.each do |entry|
+      key, value = entry.split('=', 2)
       result[key] = if key == 'TAGS'
                       # TAGS is a colon-separated string; split and sort
                       value.to_s.split(':').reject(&:empty?).sort
